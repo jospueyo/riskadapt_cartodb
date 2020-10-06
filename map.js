@@ -1,9 +1,23 @@
 var map = L.map('map').setView([42.05,3.07], 10);
 
 L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{
-    maxZoom: 20,
-    subdomains:['mt0','mt1','mt2','mt3']
-}).addTo(map);
+          maxZoom: 20,
+          subdomains:['mt0','mt1','mt2','mt3']
+        }).addTo(map);
+
+function orto_layer(){
+  return   L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{
+            maxZoom: 20,
+            subdomains:['mt0','mt1','mt2','mt3']
+          }).addTo(map);
+};
+
+function map_layer(){
+  return L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{
+          maxZoom: 20,
+          subdomains:['mt0','mt1','mt2','mt3']
+        }).addTo(map);
+};
 
 // Add Data from CARTO using the SQL API
 // Declare Variables
@@ -23,7 +37,14 @@ function getGeoJSON(){
     cartoDBPoints = L.geoJson(data,{
       pointToLayer: function(feature,latlng){
         var marker = L.marker(latlng);
-        marker.bindPopup('Nom: '+feature.properties.name+'<br>Descripció: '+feature.properties.description);
+        marker.bindPopup(
+          'Nom: '+feature.properties.name+
+          '<br>Any: '+feature.properties.year+
+          '<br>Descripció: '+feature.properties.description+
+          '<br>Tipus: '+feature.properties.type+
+          '<br>Risc: '+feature.properties.risk+
+          '<br>Enllaç:<a href="'+feature.properties.link+'" target="_blank">'+feature.properties.link+'</a>'
+        );
         return marker;
       }
     }).addTo(map);
@@ -66,8 +87,12 @@ function startEdits(){
 
 // Function to remove the draw control from the map
 function stopEdits(){
-  map.removeControl(drawControl);
-  controlOnMap = false;
+  if(controlOnMap == true){
+    map.removeControl(drawControl);
+    controlOnMap = false;
+  }else{
+    alert("L'edició ja està aturada")
+  };
 };
 
 // Use the jQuery UI dialog to create a dialog and set options
@@ -85,12 +110,14 @@ var dialog = $("#dialog").dialog({
     "Afegeix": setData,
     "Cancel·la": function() {
       dialog.dialog("close");
+      drawnItems.clearLayers();
       map.removeLayer(drawnItems);
     }
   },
   close: function() {
-    form[ 0 ].reset();
-    console.log("Dialog closed");
+    dialog.dialog("close");
+    drawnItems.clearLayers();
+    map.removeLayer(drawnItems);
   }
 });
 
@@ -101,22 +128,27 @@ var form = dialog.find("form").on("submit", function(event) {
 });
 
 function setData() {
+  if (element.value != '' && creat_per.value != '' && year.value !=''){
     var enteredName = element.value;
     var enteredDescription = description.value;
     var enteredYear = year.value;
     var enteredType = type.value;
     var enteredRisk = risk.value;
-    var enteredLink = link.value;
+    if (link.value.startsWith('http')){
+      var enteredLink = link.value;
+    } else {
+      var enteredLink = 'http://'+link.value;
+    };
     var enteredUser = creat_per.value;
 
     drawnItems.eachLayer(function (layer) {
       var sql = "INSERT INTO riskadapt (the_geom, name, description, year, type, risk, link, creat_per) VALUES (ST_SetSRID(ST_GeomFromGeoJSON('";
       var a = layer.getLatLng();
-      console.log(a);
+      //console.log(a);
       var sql2 ='{"type":"Point","coordinates":[' + a.lng + "," + a.lat + "]}'),4326),'" + enteredName + "','" +
         enteredDescription+ "',"+ enteredYear + ",'"  + enteredType+ "','"  + enteredRisk+ "','"  + enteredLink+ "','"  + enteredUser+"')";
       var pURL = sql+sql2;
-      console.log(pURL);
+      //console.log(pURL);
       submitToProxy(pURL);
       console.log("Feature has been submitted to the Proxy");
     });
@@ -124,7 +156,10 @@ function setData() {
     drawnItems = new L.FeatureGroup();
     console.log("drawnItems has been cleared");
     dialog.dialog("close");
-  };
+  }else{
+    alert("Cal omplir el camps marcats amb asterisc")
+  }
+};
 
   // Function to run when feature is drawn on map
 map.on('draw:created', function (e) {
@@ -133,3 +168,23 @@ map.on('draw:created', function (e) {
   map.addLayer(drawnItems);
   dialog.dialog("open");
 });
+
+// Submit data to the PHP using a jQuery Post method
+var submitToProxy = function(q){
+  $.post("./php/callProxy.php", {
+    qurl:q,
+    cache: false,
+    timeStamp: new Date().getTime()
+  }, function(data) {
+    console.log(data);
+    refreshLayer();
+  });
+};
+
+// refresh the layers to show the updated dataset
+function refreshLayer() {
+  if (map.hasLayer(cartoDBPoints)) {
+    map.removeLayer(cartoDBPoints);
+  };
+  getGeoJSON();
+};
