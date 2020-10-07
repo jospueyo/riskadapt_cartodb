@@ -152,6 +152,7 @@ function setData() {
       submitToProxy(pURL);
       console.log("Feature has been submitted to the Proxy");
     });
+    drawnItems.clearLayers();
     map.removeLayer(drawnItems);
     drawnItems = new L.FeatureGroup();
     console.log("drawnItems has been cleared");

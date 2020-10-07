@@ -12,11 +12,13 @@
   </head>
   <body>
     <?php
+      include 'php/users.php';
+
       $loginSuccessful=false;
       if(isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW'])){
         $userName = $_SERVER['PHP_AUTH_USER'];
         $password = $_SERVER['PHP_AUTH_PW'];
-        if($userName == 'grmatig' && $password == 'aigua'){
+        if($userName == $user && $password == $pass){
           $loginSuccessful = true;
         }
       }
@@ -24,7 +26,8 @@
       if(!$loginSuccessful){
         header('WWW-Authenticate:Basic');
         header('HTTP/1.0 401 Unauthorized');
-        echo "L'usuari o la contrassenya són incorrectes";
+        echo "Cal iniciar sessió per accedir a la pàgina";
+        exit;
       }
     ?>
 
@@ -37,8 +40,8 @@
       </div>
       <br>
       <div class="buttons">
-        <button type="button" onclick="startEdits()" name="button">Activa l'edició</button>
-        <button type="button" onclick="stopEdits()" name="button">Atura l'edició</button>
+        <button type="button" onclick="startEdits()" name="button" class="edit_button">Activa l'edició</button>
+        <button type="button" onclick="stopEdits()" name="button" class="edit_button">Atura l'edició</button>
       </div>
     </div>
 
