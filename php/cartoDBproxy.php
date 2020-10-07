@@ -4,7 +4,7 @@
     function goProxy($dataURL)
     {
         $baseURL = 'http://jospueyo.cartodb.com/api/v2/sql?';
-        $api = '&api_key=';
+        $api = '&api_key=DTeyZISTcNURpN9jskrDRg';
         $url = $baseURL.'q='.urlencode($dataURL).$api;
         $result = file_get_contents ($url);
         return $result;
