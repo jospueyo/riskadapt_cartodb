@@ -134,10 +134,12 @@ function setData() {
     var enteredYear = year.value;
     var enteredType = type.value;
     var enteredRisk = risk.value;
-    if (link.value.startsWith('http')){
-      var enteredLink = link.value;
-    } else {
+    if (link.value != "" && !link.value.startsWith('http')){
+      console.log("not empty or without http")
       var enteredLink = 'http://'+link.value;
+    } else {
+      console.log("empty or with http")
+      var enteredLink = link.value;
     };
     var enteredUser = creat_per.value;
 
