@@ -7,7 +7,7 @@ JS libraries used:
 2. Leaflet.draw
 3. JQuery
 
-Two PHP files are not in the repository for privacity:
+Two PHP files are not in the repository for privacy:
 
 1. users.php (contains authentication information)
 2. cartoDBproxy.php (contains the API key of CARTO.COM)
